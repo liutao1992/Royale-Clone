@@ -5,8 +5,8 @@ import { ARENA_WIDTH, ARENA_LENGTH } from '../core/data/arena'
 /**
  * 固定相机参数（Stage 1 标定对象）
  *
- * 初始值依据：场地 18×32 比例 = 9:16，与竖屏视野一致；
- * FOV 35 / 距离约 50 tiles 时可完整覆盖场地。
+ * 约 45° 斜俯视，显示塔的正面；30° 视野角减轻远近尺寸差。
+ * 实际距离由窗口尺寸和 HUD 留白自动适配。
  */
 export interface CameraParams {
   fov: number
@@ -19,10 +19,10 @@ export interface CameraParams {
 }
 
 export const DEFAULT_CAMERA: CameraParams = {
-  fov: 35,
+  fov: 30,
   posX: ARENA_WIDTH / 2,
-  posY: 46,
-  posZ: -10,
+  posY: 36,
+  posZ: -20,
   targetX: ARENA_WIDTH / 2,
   targetY: 0,
   targetZ: ARENA_LENGTH / 2,
