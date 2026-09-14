@@ -4,7 +4,18 @@ import { ModelLibrary } from './render/ModelLibrary'
 const host = document.getElementById('canvas-host')
 if (!host) throw new Error('缺少 #canvas-host 容器')
 
-// 预载 CC0 模型（失败不阻塞：EntityViews 会回退程序化建模）
-ModelLibrary.instance.load().catch(() => {}).then(() => {
+const loading = document.createElement('div')
+loading.className = 'loading-screen'
+loading.setAttribute('role', 'status')
+loading.textContent = '正在准备竞技场…'
+document.body.append(loading)
+// A match starts only after assets settle, so loading never consumes match time.
+ModelLibrary.instance.load((done, total) => {
+  loading.textContent = `正在准备竞技场… ${Math.round(done / total * 100)}%`
+}).then(() => {
   new GameController(host)
+  loading.remove()
+}).catch((error: unknown) => {
+  console.error('游戏启动失败', error)
+  loading.textContent = '竞技场启动失败，请刷新重试。'
 })

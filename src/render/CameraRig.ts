@@ -34,8 +34,10 @@ export class CameraRig {
   private params: CameraParams
   private readonly controls: OrbitControls
   private free = false
+  private width = 0
+  private height = 0
 
-  constructor(dom: HTMLElement) {
+  constructor(private readonly dom: HTMLElement) {
     this.params = { ...DEFAULT_CAMERA }
     this.camera = new THREE.PerspectiveCamera(this.params.fov, 1, 0.1, 600)
 
@@ -47,6 +49,7 @@ export class CameraRig {
     this.controls.target.set(this.params.targetX, this.params.targetY, this.params.targetZ)
 
     this.apply()
+    this.resize()
   }
 
   get isFree(): boolean {
@@ -76,7 +79,36 @@ export class CameraRig {
   }
 
   update(): void {
+    this.resize()
     if (this.free) this.controls.update()
+  }
+
+  private resize(): void {
+    const width = this.dom.clientWidth, height = this.dom.clientHeight
+    if (!width || !height || (width === this.width && height === this.height)) return
+    this.width = width; this.height = height
+    const top = Math.min(95, height * 0.16), bottom = Math.min(210, height * 0.29)
+    this.camera.aspect = width / height
+    this.camera.setViewOffset(width, height, 0, (bottom - top) / 2, width, height)
+    if (this.free) return
+    this.apply()
+    const target = new THREE.Vector3(this.params.targetX, this.params.targetY, this.params.targetZ)
+    const direction = this.camera.position.clone().sub(target).normalize()
+    let distance = this.camera.position.distanceTo(target)
+    // Fit the complete asset footprint and tower height between the HUD and hand.
+    const corners: THREE.Vector3[] = []
+    for (const x of [-1, ARENA_WIDTH + 1]) for (const z of [-1, ARENA_LENGTH + 1]) {
+      for (const y of [0, 4.2]) corners.push(new THREE.Vector3(x, y, z))
+    }
+    for (let i = 0; i < 100; i++) {
+      this.camera.position.copy(target).addScaledVector(direction, distance)
+      this.camera.updateMatrixWorld()
+      if (corners.every(corner => {
+        const p = corner.clone().project(this.camera)
+        return Math.abs(p.x) < 0.95 && p.y < 1 - 2 * top / height && p.y > -1 + 2 * bottom / height
+      })) break
+      distance *= 1.025
+    }
   }
 
   /** 当前相机参数（自由视角下取实际相机姿态），用于调参固化 */

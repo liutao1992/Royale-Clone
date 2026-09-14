@@ -1,0 +1,187 @@
+{
+  "source": "User-provided Lux3D assembly",
+  "textureMaxDimension": 512,
+  "staticMeshes": true,
+  "assets": [
+    {
+      "file": "ENV-01.glb",
+      "sourceSha256": "e736c1e9168ce1d43a3c52d152b8daed92c97ff732bed2d802e3ca5f5d4b681c",
+      "sha256": "775efe335de96229cd657b327b86938b107690e4adf6c8f8a660daa6933b22d9",
+      "bytes": 935612
+    },
+    {
+      "file": "ENV-02.glb",
+      "sourceSha256": "6d4a45ea88035d9c51a7d4ece287af4acddbfc0ee9d9e5175001646e503868db",
+      "sha256": "c90b009945692234c854bca58732c9c8a2f0b2620aa878eaed5ee7a0e7e47323",
+      "bytes": 619464
+    },
+    {
+      "file": "ENV-03.glb",
+      "sourceSha256": "1c7af9aa33d97c03066bcaa62a7e20dcbdea45d9966b9c7accb28e4f5e35d1e8",
+      "sha256": "f3eaa23cc484a76f2aa42e2fc2b3a0715c6dc7bd95f6019c6e44706984f1768a",
+      "bytes": 1022700
+    },
+    {
+      "file": "ENV-05.glb",
+      "sourceSha256": "efd31313ca9c31dc362ec8ec8dc04403b2d1127bd970b3b3fc89a33ded2bd472",
+      "sha256": "1b565e80d60f75c67d607397bd7be1c26771c5b774c9f8c853239199b6ecd563",
+      "bytes": 1019560
+    },
+    {
+      "file": "ENV-06.glb",
+      "sourceSha256": "5800ec586f905cd14ec1c13778a860dc5166ec65377e36956225a5be4f9638fc",
+      "sha256": "483850f0cb17f45cca462b9099e92394bea5b338fa672ddd5fa7c5a4cbfa94b8",
+      "bytes": 924124
+    },
+    {
+      "file": "ENV-07.glb",
+      "sourceSha256": "dfcdc3b5fe95ccb716b648ef1adb7a2f189f42581343b7f5d0ea698884287e0a",
+      "sha256": "0e8a3f8dffe455411aca232fe58544463f06c69093a08168091f561fdea19c25",
+      "bytes": 956444
+    },
+    {
+      "file": "ENV-08.glb",
+      "sourceSha256": "470d124e30fd064678e7ea79e3ee2ef4173a151f58c82b2c389465ba26f3f2cf",
+      "sha256": "1b48dc3dae585cdbdbf7691ea37038ccb47a043a86cd765ef5096c42993eb257",
+      "bytes": 892148
+    },
+    {
+      "file": "ENV-09.glb",
+      "sourceSha256": "e7fb3781eca791e83a7a89ece8fbab73160e4891383e0cad042500028ef607b8",
+      "sha256": "ef0764821a086383cdd71351639a2de56f753883ebbaca777e51723b16648184",
+      "bytes": 1304448
+    },
+    {
+      "file": "ENV-10.glb",
+      "sourceSha256": "a94f4de4d36c23dad7e4f35744cdd2c59cc642a341cdbf16ed3c48a8e356a557",
+      "sha256": "08276b3ace007ab8ba8d4b171c8930bd962dfd3e2d674dc082825b5e7cf63e97",
+      "bytes": 639672
+    },
+    {
+      "file": "BLD-05.glb",
+      "sourceSha256": "4d67e06c584b6739ff4dee15882b1a0ba2ce70409333d582e6841f86c48afbb2",
+      "sha256": "872805c811ab33b1002a67ce6db28f8151abe917aaad419c042cc78be57aa39e",
+      "bytes": 1114584
+    },
+    {
+      "file": "BLD-06.glb",
+      "sourceSha256": "1f49ee6b9ed1d434a742f7af8c371f6424699eee8a3069cf2337e3caa1d6214f",
+      "sha256": "e21e86b54a265081600976838f8e86c4f0ca15aabe3e67aad2c9f81b5c1bcea9",
+      "bytes": 1061240
+    },
+    {
+      "file": "BLD-07.glb",
+      "sourceSha256": "3bdf9b8165da00686d651ff50bbcc58b527838ad4ccc5e90c00b29addd839a36",
+      "sha256": "2fc66715a1c68ebe83756df00ff4602982dab8d0f3cba2e68db84edaacb57753",
+      "bytes": 1030900
+    },
+    {
+      "file": "BLD-08.glb",
+      "sourceSha256": "c8cbab1491af6b9edaa5732d3f183e3daa4de5481ab12312886a56e4e05e49ad",
+      "sha256": "4146208f7b3ae6535cf5a71220d17a7dc69508b0e735539912b331a819c5832e",
+      "bytes": 679404
+    },
+    {
+      "file": "PRJ-01.glb",
+      "sourceSha256": "41a207889e4bac02bfc449bafeb4497020caf6ba2364d3a92eb10c54f489ee7f",
+      "sha256": "375e511eea19e5bf35b226e95dd784cfec0c29e82999415fb7b9dd56a9fc77e6",
+      "bytes": 987256
+    },
+    {
+      "file": "PRJ-02.glb",
+      "sourceSha256": "522bb30eaf6b64c38f43c0a9c619878ec8a295e31212ee2cad791a2041e0664b",
+      "sha256": "54c467008c156bc5bbba4f7189721c83eb625e7aa4aa2af985cdc5d873adc2e8",
+      "bytes": 911620
+    },
+    {
+      "file": "PRJ-03.glb",
+      "sourceSha256": "4cb79a9b300da7a3e16c2350aa5db34a6c92aa6c54ab7f643e253d2f1550b3bc",
+      "sha256": "dfb33e6c3ad8833538be06e36fb76516e2fc61407749d75acda5e27836b7740e",
+      "bytes": 642360
+    },
+    {
+      "file": "princess_tower_blue.glb",
+      "sourceSha256": "44730fc4a12aa4e1b56b96866a893e580f847dba7e0151211452996b65cb860d",
+      "sha256": "db893f846c5a44446338ca1e975cf035358a63a044e6a7d289f8f1a47e545ac2",
+      "bytes": 2640676
+    },
+    {
+      "file": "king_tower_blue.glb",
+      "sourceSha256": "f36fa8be390570fad4d4140d37cb7fc61e89c370afa00a803df56ee6aaed2cb7",
+      "sha256": "f76904c35accefc9a95a55df7e18e5a13cd2b3c52e958ce17b39bb2bc663ffee",
+      "bytes": 3860748
+    },
+    {
+      "file": "knight_blue.glb",
+      "sourceSha256": "33612ddd0ee89577f1d6a5d21cf30ae721be3ed44bc59f609291e0fd1b97f091",
+      "sha256": "585b9b689d26fe611e6c1b37f194209e180586ce830a54e64fd71c57990d8fab",
+      "bytes": 1261252
+    },
+    {
+      "file": "archer_blue.glb",
+      "sourceSha256": "802c75f4b814636e9d3225c1ea41f3044fdb921372707c876aa79b608fc96878",
+      "sha256": "2a2a6058255d9c647aba6121020ee303911e3f85db698ba81dfec33e1faf26dd",
+      "bytes": 1320584
+    },
+    {
+      "file": "giant_blue.glb",
+      "sourceSha256": "ce96339c53f68a564fae43e46510d9961ec2b68a69ffcdb301cb8f32cfbf781a",
+      "sha256": "b975cdee518f29ae7df850ef9b0de41ba6210cbd26b35006914a6ffa1dd66b27",
+      "bytes": 1410768
+    },
+    {
+      "file": "goblin_blue.glb",
+      "sourceSha256": "ca72655181c1e754eb49a42975c019d1f3483932ed37e1a721f9b86d61b409e8",
+      "sha256": "36ad5777a4da6c0c26f37aab9ed3cc2ce78a0e22f1fa0b020154b84dcae65a66",
+      "bytes": 914636
+    },
+    {
+      "file": "bomber_blue.glb",
+      "sourceSha256": "721faa1d571574f670c48f254712cb661b9c39dcedc4f41f440eafb57f5f279e",
+      "sha256": "16f0e4f366110fd98accb6322602b14e78b4ad80a208d91e0c4ca3a79fda11c0",
+      "bytes": 2339576
+    },
+    {
+      "file": "princess_tower_red.glb",
+      "sourceSha256": "057c53f0c26b9a9e0bbe75adfb1813775f6807195ee4eedea83baee64459c2b5",
+      "sha256": "4ad41ffbe1df9e2d87d3d7135a8b6f68799e91e414efb9038486eeb2d12a9251",
+      "bytes": 2657408
+    },
+    {
+      "file": "king_tower_red.glb",
+      "sourceSha256": "3fbf7eabd69a42d5e3af5e8bc798882d6fbf09029242a29efeb7fd28fbeb74d2",
+      "sha256": "b34f1bc86b799cc11b3507a635780521618d03994aa8e9ba1fe8026437dc3875",
+      "bytes": 3881872
+    },
+    {
+      "file": "knight_red.glb",
+      "sourceSha256": "3188175a87ecc5ceac0015fb9da2cd9e61caefd367fbe7d7bb4af03b1006519c",
+      "sha256": "2e8837488a89d0ec92f2aba9374772aba62a35b8329972fe8828379504b97c09",
+      "bytes": 1271616
+    },
+    {
+      "file": "archer_red.glb",
+      "sourceSha256": "097e12a98b91bf59ea3a8734a58e45039892730aefd90fade30f698c63916787",
+      "sha256": "9bfb2ed0d6257a3b9298402083c93a335a0f8c794ab04fb10bae43c68341061f",
+      "bytes": 1326456
+    },
+    {
+      "file": "giant_red.glb",
+      "sourceSha256": "18749581762569da53177fc81210c61fb2a8f476b7504924ba2c10a340de4664",
+      "sha256": "ca78d3d80c8dedc4649db72e2bb3586c66a4bd0667dbc18b517a80bc69fa9be4",
+      "bytes": 1410768
+    },
+    {
+      "file": "goblin_red.glb",
+      "sourceSha256": "9341ae3b9e7cefa9d65b1a7741d224109b08a1ad7bfe405803efb2d0b486b497",
+      "sha256": "918d8327c1cecdd9d918534ebbf124336937f3db7527c5a5ae1985b4af8d5beb",
+      "bytes": 914880
+    },
+    {
+      "file": "bomber_red.glb",
+      "sourceSha256": "24145c3f6d90b145f3e37d3d8d8195f1fe740113cd7d8656b9b5515378a5d22e",
+      "sha256": "ea16266832cfa902ac09d555fd514a69ad8de04ca7a278e79f5d7416b9513672",
+      "bytes": 2339808
+    }
+  ]
+}

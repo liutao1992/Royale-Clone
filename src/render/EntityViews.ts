@@ -4,6 +4,7 @@ import type { Entity } from '../core/types'
 import type { World } from '../core/World'
 import { type Team } from '../core/data/arena'
 import { ModelLibrary } from './ModelLibrary'
+import { buildProjectileActor, buildRuinActor, disposeActor } from './LuxEffects'
 import {
   buildCannonActor,
   buildTowerActor,
@@ -108,7 +109,7 @@ export class EntityViews {
         this.views.set(entity.id, record)
         this.root.add(record.root)
       }
-      updateRecord(record, entity, camera, time, dt)
+      updateRecord(record, entity, world, camera, time, dt)
     }
 
     for (const [id, record] of this.views) {
@@ -118,6 +119,9 @@ export class EntityViews {
         continue
       }
       if (!record.destroyed) {
+        disposeActor(record.root)
+        record.mixer?.stopAllAction()
+        record.mixer?.uncacheRoot(record.body)
         this.root.remove(record.root)
         this.views.delete(id)
       }
@@ -126,9 +130,19 @@ export class EntityViews {
 
   clear(): void {
     for (const record of this.views.values()) {
+      disposeActor(record.root)
+      record.mixer?.stopAllAction()
+      record.mixer?.uncacheRoot(record.body)
       this.root.remove(record.root)
     }
     this.views.clear()
+  }
+
+  getDebugState() {
+    return [...this.views.values()].map((view) => ({ id: view.id, cardId: view.entity.cardId,
+      model: view.body.userData.modelName ?? 'fallback', destroyed: view.destroyed,
+      rotation: view.body.rotation.y, opacity: view.materials[0]?.opacity ?? 1,
+    }))
   }
 
   private createRecord(entity: Entity): ViewRecord {
@@ -155,13 +169,15 @@ export class EntityViews {
         body = createSpellMarker(Math.max(entity.projectile.areaRadius, 0.8))
         barY = 0
       } else {
-        const geo = new THREE.SphereGeometry(0.13, 10, 8)
+        const generated = buildProjectileActor(entity)
+        const geo = generated ? null : new THREE.SphereGeometry(0.13, 10, 8)
         const material = new THREE.MeshStandardMaterial({
           color: entity.team === 'enemy' ? 0xe0454f : 0x3d8bfd,
           emissive: entity.team === 'enemy' ? 0xe0454f : 0x3d8bfd,
           emissiveIntensity: 0.6,
         })
-        body = new THREE.Mesh(geo, material)
+        body = generated ?? new THREE.Mesh(geo!, material)
+        if (generated) material.dispose()
         body.position.y = 0.9
         barY = 0
       }
@@ -180,7 +196,7 @@ export class EntityViews {
       if (actor) {
         body = actor.group
         // 角色总高 ≈ 0.78 × scale，血条悬于头顶
-        barY = body.scale.y * 0.78 + 0.5
+        barY = actor.barY
         mixer = actor.mixer
         anims = actor.anims
         fast = actor.fast
@@ -221,8 +237,17 @@ export class EntityViews {
   }
 }
 
-function updateRecord(record: ViewRecord, entity: Entity, camera: THREE.Camera, time: number, dt: number): void {
+function updateRecord(record: ViewRecord, entity: Entity, world: World, camera: THREE.Camera, time: number, dt: number): void {
   const { root, body } = record
+
+  const dx = entity.pos.x - root.position.x
+  const dz = entity.pos.y - root.position.z
+  const target = entity.targetId !== null ? world.byId(entity.targetId) : undefined
+  if (entity.kind === 'unit' && entity.state === 'moving' && dx * dx + dz * dz > 0.000001) {
+    body.rotation.y = Math.atan2(dx, dz)
+  } else if (entity.kind === 'unit' && target && entity.state === 'attacking') {
+    body.rotation.y = Math.atan2(target.pos.x - entity.pos.x, target.pos.y - entity.pos.y)
+  }
 
   root.position.x = entity.pos.x
   root.position.z = entity.pos.y
@@ -231,6 +256,8 @@ function updateRecord(record: ViewRecord, entity: Entity, camera: THREE.Camera, 
     if (entity.projectile && entity.projectile.targetId == null) {
       const pulse = 1 + Math.sin(time * 10) * 0.08
       body.scale.setScalar(pulse)
+    } else if (entity.projectile) {
+      body.rotation.y = Math.atan2(entity.projectile.targetPos.x - entity.pos.x, entity.projectile.targetPos.y - entity.pos.y)
     }
     return
   }
@@ -279,6 +306,11 @@ function updateRecord(record: ViewRecord, entity: Entity, camera: THREE.Camera, 
   if (entity.layer === 'air' && entity.kind === 'unit' && !record.mixer) {
     body.position.y = AIR_HEIGHT + Math.sin(time * 3 + record.phase) * 0.08
   }
+  if (body.userData.staticUnit) {
+    // Whole-mesh motion feedback only: these source assets have no skeletal clips.
+    body.position.y = entity.state === 'moving' ? Math.abs(Math.sin(time * 9 + record.phase)) * 0.045 : 0
+    body.rotation.x = entity.state === 'attacking' ? Math.sin(time * 10) * 0.045 : 0
+  }
 
   record.bar?.set(entity.hp / entity.maxHp)
   record.bar?.face(camera)
@@ -296,6 +328,17 @@ function ruinify(record: ViewRecord): void {
   record.destroyed = true
   record.bar?.hide()
   record.mixer?.stopAllAction()
+  const ruin = buildRuinActor(record.entity)
+  if (ruin) {
+    ruin.rotation.y = record.body.rotation.y
+    record.root.remove(record.body)
+    disposeActor(record.body)
+    record.body = ruin
+    record.root.add(ruin)
+    record.root.scale.setScalar(1)
+    record.materials = collectMaterials(ruin)
+    return
+  }
   const s = record.entity.kind === 'tower' ? (record.entity.towerKind === 'king' ? 0.5 : 0.55) : 0.6
   record.body.scale.y *= s
   record.body.position.y *= s

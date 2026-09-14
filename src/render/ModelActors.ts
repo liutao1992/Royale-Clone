@@ -3,7 +3,7 @@ import type { AnimationAction } from 'three'
 import type { Entity } from '../core/types'
 import type { Team } from '../core/data/arena'
 import { ALL_CARDS } from '../core/data/cards'
-import { ModelLibrary } from './ModelLibrary'
+import { ModelLibrary, type ModelName } from './ModelLibrary'
 import { buildAccessory, buildCrown, type AccessoryKind } from './CharacterMeshes'
 
 /**
@@ -76,8 +76,9 @@ const UNIT_MODEL_CONF: Record<string, UnitModelConf> = {
 
 export interface UnitActor {
   group: THREE.Group
-  mixer: THREE.AnimationMixer
-  anims: { idle: AnimationAction; walk: AnimationAction; sprint: AnimationAction; attack: AnimationAction }
+  barY: number
+  mixer: THREE.AnimationMixer | null
+  anims: { idle: AnimationAction; walk: AnimationAction; sprint: AnimationAction; attack: AnimationAction } | null
   fast: boolean
 }
 
@@ -124,6 +125,16 @@ function attachAccessories(root: THREE.Group, conf: UnitModelConf, lib: ModelLib
 
 /** 实例化带骨骼动画的卡牌角色；模型不可用时返回 null */
 export function buildUnitActor(entity: Entity, lib: ModelLibrary): UnitActor | null {
+  const models: Record<string, [ModelName, ModelName]> = {
+    knight: ['knightBlue', 'knightRed'], archers: ['archerBlue', 'archerRed'],
+    giant: ['giantBlue', 'giantRed'], goblins: ['goblinBlue', 'goblinRed'], bomber: ['bomberBlue', 'bomberRed'],
+  }
+  const pair = models[entity.cardId]
+  const generated = pair ? lib.cloneStatic(pair[entity.team === 'enemy' ? 1 : 0]) : null
+  if (generated) {
+    generated.userData.staticUnit = true
+    return { group: generated, barY: new THREE.Box3().setFromObject(generated).max.y + 0.35, mixer: null, anims: null, fast: false }
+  }
   const conf = UNIT_MODEL_CONF[entity.cardId]
   if (!conf) return null
   const template = lib.get(conf.base)
@@ -159,7 +170,7 @@ export function buildUnitActor(entity: Entity, lib: ModelLibrary): UnitActor | n
   anims.idle.play()
 
   const def = ALL_CARDS[entity.cardId]
-  return { group: root, mixer, anims, fast: (def?.speed ?? 1) >= 1.8 }
+  return { group: root, barY: root.scale.y * 0.78 + 0.5, mixer, anims, fast: (def?.speed ?? 1) >= 1.8 }
 }
 
 // ---------- 塔（Kenney TDK 模块堆叠） ----------
@@ -192,6 +203,11 @@ function stackTower(
 
 export function buildTowerActor(entity: Entity, lib: ModelLibrary): StaticActor | null {
   const team = entity.team as Team
+  const name = entity.towerKind === 'king'
+    ? (team === 'player' ? 'kingBlue' : 'kingRed')
+    : (team === 'player' ? 'princessBlue' : 'princessRed')
+  const generated = lib.cloneStatic(name)
+  if (generated) return { group: generated, barY: new THREE.Box3().setFromObject(generated).max.y + 0.35 }
   if (entity.towerKind === 'king') {
     const group = stackTower(
       [lib.cloneStatic('towerSquareBottom'), lib.cloneStatic('towerSquareMiddle'), lib.cloneStatic('towerSquareTop')],
@@ -230,6 +246,8 @@ export function buildTowerActor(entity: Entity, lib: ModelLibrary): StaticActor 
 // ---------- 加农炮 ----------
 
 export function buildCannonActor(entity: Entity, lib: ModelLibrary): StaticActor | null {
+  const generated = lib.cloneStatic('luxCannon')
+  if (generated) return { group: generated, barY: 1.2 }
   const cannon = lib.cloneStatic('cannon')
   if (!cannon) return null
   const team = entity.team as Team

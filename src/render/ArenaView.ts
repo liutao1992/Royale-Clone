@@ -8,6 +8,8 @@ import {
   type TowerSlot,
 } from '../core/data/arena'
 import { TOWER_CARDS } from '../core/data/cards'
+import { ModelLibrary } from './ModelLibrary'
+import { buildLuxArena } from './LuxArena'
 
 const COLORS = {
   grassLight: '#64b45f',
@@ -36,9 +38,13 @@ export class ArenaView {
   private readonly ranges: THREE.Group
 
   constructor() {
-    this.root.add(this.buildUnderlay())
-    this.root.add(this.buildGround())
-    this.root.add(this.buildRiverAndBridges())
+    const generated = buildLuxArena(ModelLibrary.instance)
+    if (generated) this.root.add(generated)
+    else {
+      this.root.add(this.buildUnderlay())
+      this.root.add(this.buildGround())
+      this.root.add(this.buildRiverAndBridges())
+    }
 
     this.grid = buildGrid()
     this.grid.visible = false

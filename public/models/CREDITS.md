@@ -1,5 +1,11 @@
 # 3D 模型素材来源与许可
 
+## Lux3D / Blender 项目素材
+
+`lux3d/` 是用户提供的 Lux3D 生成模型，经本项目 Blender 组装流程归一化、组合及生成红蓝材质后接入游戏。运行时副本将纹理限制为 512 像素，来源摘要记录于 `lux3d/manifest.json`。
+
+这部分素材与下方的 Kenney CC0 资产分开记录，不将 Kenney 的 CC0 许可套用于生成素材。接入范围、运行和重建方式见 `docs/ASSET_INTEGRATION.md`。
+
 ## Kenney (https://kenney.nl) — CC0 1.0 (公有领域)
 
 | 文件 | 来源资产包 |

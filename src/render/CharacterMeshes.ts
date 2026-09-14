@@ -65,8 +65,8 @@ export function collectMaterials(root: THREE.Object3D): THREE.MeshStandardMateri
   const found: THREE.MeshStandardMaterial[] = []
   root.traverse((child) => {
     const material = (child as THREE.Mesh).material
-    if (material instanceof THREE.MeshStandardMaterial && !found.includes(material)) {
-      found.push(material)
+    for (const item of Array.isArray(material) ? material : [material]) {
+      if (item instanceof THREE.MeshStandardMaterial && !found.includes(item)) found.push(item)
     }
   })
   return found

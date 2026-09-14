@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
+import { pathToFileURL } from 'node:url'
+import { resolve } from 'node:path'
 
 interface GameDebugState {
   phase: string
@@ -19,6 +21,8 @@ declare global {
       getState(): GameDebugState
       fastForward(seconds: number): void
       tileToScreen(x: number, y: number): { x: number; y: number }
+      getAssets(): { ready: boolean; loaded: number; total: number; failed: string[]; arena: boolean;
+        views: { id: number; model: string; destroyed: boolean }[] }
     }
   }
 }
@@ -61,6 +65,11 @@ test.describe('Royale Clone 功能测试', () => {
     const state = await getState(page)
     expect(state.towerCount).toBe(6)
     expect(state.phase).toBe('normal')
+    const assets = await page.evaluate(() => window.__game.getAssets())
+    expect(assets.ready).toBe(true)
+    expect(assets.failed).toEqual([])
+    expect(assets.arena).toBe(true)
+    expect(assets.views.filter(v => /^(king|princess)(Blue|Red)$/.test(v.model))).toHaveLength(6)
   })
 
   test('2. 初始手牌、费用与下一张预览正确', async ({ page }) => {
@@ -102,6 +111,7 @@ test.describe('Royale Clone 功能测试', () => {
     expect(after.playerElixir).toBeLessThan(before.playerElixir)
     expect(after.playerHand).not.toContain('knight')
     expect(after.playerHand[0]).toBe('minions')
+    expect((await page.evaluate(() => window.__game.getAssets())).views.some(v => v.model === 'knightBlue')).toBe(true)
   })
 
   test('4. 非法拖拽（敌方半场）：不部署、不扣费、手牌不变', async ({ page }) => {
@@ -152,5 +162,46 @@ test.describe('Royale Clone 功能测试', () => {
     expect(state.winner).toBeNull()
     expect(state.elapsed).toBeLessThan(10)
     expect(state.towerCount).toBe(6)
+    expect((await page.evaluate(() => window.__game.getAssets())).views.some(v => v.destroyed)).toBe(false)
+  })
+
+  test('8. 单个新模型缺失时仍能启动并部署', async ({ page }) => {
+    await page.route('**/models/lux3d/knight_blue.glb', route => route.abort())
+    await openGame(page)
+    expect((await page.evaluate(() => window.__game.getAssets())).failed).toContain('knightBlue')
+    await dragCardTo(page, 0, 9, 8)
+    await expect.poll(async () => (await getState(page)).playerHand[0]).toBe('minions')
+  })
+
+  test('9. 战斗素材加载无异常并保存实机截图', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', error => errors.push(error.message))
+    await openGame(page)
+    await dragCardTo(page, 0, 3.5, 10)
+    await page.evaluate(() => window.__game.fastForward(10))
+    await expect.poll(async () => (await page.evaluate(() => window.__game.getAssets())).views.length).toBeGreaterThan(6)
+    await page.screenshot({ path: 'artifacts/lux3d-game.png' })
+    expect(errors).toEqual([])
+  })
+
+  test('10. 单 HTML 在离线 file 模式下加载并可部署', async ({ page, context }) => {
+    const errors: string[] = [], requests: string[] = []
+    page.on('pageerror', error => errors.push(error.message))
+    page.on('request', request => { if (/^https?:/.test(request.url())) requests.push(request.url()) })
+    await context.setOffline(true)
+    await page.goto(pathToFileURL(resolve('dist/royale-offline.html')).href)
+    await expect(page.locator('.loading-screen')).toHaveCount(0, { timeout: 30_000 })
+    await expect(page.locator('#canvas-host canvas')).toBeVisible()
+    const card = await page.locator('.card[data-slot="0"]').boundingBox()
+    if (!card) throw new Error('手牌未加载')
+    const viewport = page.viewportSize()!
+    await page.mouse.move(card.x + card.width / 2, card.y + card.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(viewport.width / 2, viewport.height * 0.57, { steps: 10 })
+    await page.mouse.up()
+    await expect(page.locator('.card[data-slot="0"] .card-name')).toHaveText('Minions')
+    await page.screenshot({ path: 'artifacts/royale-offline.png' })
+    expect(errors).toEqual([])
+    expect(requests).toEqual([])
   })
 })

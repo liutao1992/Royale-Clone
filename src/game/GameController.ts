@@ -13,6 +13,7 @@ import { HUD } from '../ui/HUD'
 import { HandBar } from '../ui/HandBar'
 import { DragDeploy } from '../ui/DragDeploy'
 import { MatchEnd } from '../ui/MatchEnd'
+import { ModelLibrary } from '../render/ModelLibrary'
 
 /**
  * 游戏控制器：组装模拟核心（Match）与表现层（Three.js 视图 / DOM UI）。
@@ -73,6 +74,8 @@ export class GameController {
     if (!import.meta.env.DEV) return
 
     const api = {
+      getAssets: () => ({ ...ModelLibrary.instance.status, views: this.entityViews.getDebugState(),
+        arena: this.arena.root.getObjectByName('Lux3D arena') !== undefined }),
       getState: () => ({
         phase: this.match.state.phase,
         elapsed: this.match.state.elapsed,
