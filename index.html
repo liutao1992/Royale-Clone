@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Royale Clone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --gold: #ffd23e;
+        --gold-hi: #ffe98a;
+        --gold-deep: #f0a020;
+        --gold-edge: #8a5c10;
+        --navy: #16346e;
+        --navy-deep: #0d2450;
+        --ink: #0e1d3f;
+        --paper: #f6f2e9;
+        --muted: #aebbd0;
+        --elixir: #ff5fd0;
+        --elixir-deep: #a020c9;
+        --red: #ff6a5e;
+        --cyan: #62d9e8;
+        --font-display: 'Lilita One', 'Arial Rounded MT Bold', 'Hiragino Maru Gothic ProN',
+          'PingFang SC', 'Microsoft YaHei', sans-serif;
+        --font-body: 'Nunito', 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
+        --outline-dark: -1px -1px 0 rgba(10, 22, 48, 0.9), 1px -1px 0 rgba(10, 22, 48, 0.9),
+          -1px 1px 0 rgba(10, 22, 48, 0.9), 1px 1px 0 rgba(10, 22, 48, 0.9);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #79c3f0;
+        font-family: var(--font-body);
+        color: var(--paper);
+        user-select: none;
+      }
+      #app {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      #canvas-host {
+        position: absolute;
+        inset: 0;
+      }
+      #canvas-host canvas {
+        display: block;
+      }
+
+      /* ---------- UI 层 ---------- */
+      #ui {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      /* ---------- 顶栏（对局 HUD） ---------- */
+      #topbar {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 9px 16px;
+        background: linear-gradient(180deg, #234a8e 0%, #16346e 60%, #102a5c 100%);
+        border: 2px solid var(--gold);
+        border-radius: 14px;
+        box-shadow: 0 10px 26px rgba(6, 14, 34, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.22),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.28);
+      }
+
+      .team-side {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .team-side.player {
+        flex-direction: row-reverse;
+      }
+      .avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        font-size: 21px;
+        border-radius: 11px;
+        border: 2px solid rgba(255, 255, 255, 0.75);
+        box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 3px 8px rgba(0, 0, 0, 0.35);
+      }
+      .avatar.enemy {
+        background: linear-gradient(180deg, #ff8a80, #d0342c);
+      }
+      .avatar.player {
+        background: linear-gradient(180deg, #7db9ff, #2a6ad0);
+      }
+      .team-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        min-width: 76px;
+      }
+      .team-name {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.92);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      }
+      .team-side.enemy .team-name {
+        color: #ffb0a8;
+      }
+      .team-side.player .team-name {
+        color: #a8d4ff;
+      }
+
+      .timer-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 5px 18px 4px;
+        background: linear-gradient(180deg, #ffe27a 0%, #ffc21e 55%, #f0a020 100%);
+        border: 2px solid var(--gold-edge);
+        border-radius: 11px;
+        box-shadow: 0 4px 0 #8a5c10, 0 8px 18px rgba(0, 0, 0, 0.35),
+          inset 0 2px 0 rgba(255, 255, 255, 0.7);
+      }
+      #timer {
+        font-family: var(--font-display);
+        font-size: 27px;
+        line-height: 1.05;
+        color: #14335f;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 1px;
+        min-width: 84px;
+        text-align: center;
+      }
+      .timer-label {
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: rgba(90, 50, 0, 0.75);
+      }
+
+      .crowns {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .crowns .count {
+        font-family: var(--font-display);
+        font-size: 19px;
+        color: #fff;
+        text-shadow: 0 2px 0 rgba(10, 22, 48, 0.9), 0 3px 6px rgba(0, 0, 0, 0.5);
+        min-width: 14px;
+      }
+      .crowns.enemy .count {
+        color: #ffb3ab;
+      }
+      .crowns.player .count {
+        color: #aee2ff;
+      }
+      .crown-icon {
+        width: 21px;
+        height: 16px;
+        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+      }
+
+      #phase-banner {
+        position: absolute;
+        top: 84px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.8);
+        padding: 8px 30px;
+        font-family: var(--font-display);
+        font-size: 16px;
+        letter-spacing: 4px;
+        color: #fff;
+        text-shadow: 0 2px 0 rgba(10, 22, 48, 0.9);
+        background: linear-gradient(180deg, #2f5da8 0%, #16346e 100%);
+        border: 2px solid var(--gold);
+        border-radius: 999px;
+        box-shadow: 0 8px 20px rgba(6, 14, 34, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        opacity: 0;
+        transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+      }
+      #phase-banner.visible {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+      #phase-banner.flash {
+        animation: banner-flash 1.1s ease 2;
+      }
+      @keyframes banner-flash {
+        0%,
+        100% {
+          box-shadow: 0 8px 20px rgba(6, 14, 34, 0.5), 0 0 0 rgba(255, 210, 62, 0);
+        }
+        50% {
+          box-shadow: 0 8px 20px rgba(6, 14, 34, 0.5), 0 0 28px rgba(255, 210, 62, 0.75);
+        }
+      }
+
+      /* ---------- 底栏 ---------- */
+      #bottombar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 20px 0 14px;
+        background: linear-gradient(
+          to top,
+          rgba(10, 22, 48, 0.97) 0%,
+          rgba(13, 28, 60, 0.88) 55%,
+          rgba(13, 28, 60, 0) 100%
+        );
+      }
+
+      /* 圣水条：左侧圣水滴 + 液体管 + 数字 */
+      #elixir-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .elixir-drop {
+        position: relative;
+        width: 22px;
+        height: 27px;
+        background: radial-gradient(circle at 34% 30%, #ff9ff2 0%, #e044d0 45%, #8a1fb8 100%);
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 3px 8px rgba(90, 10, 110, 0.6),
+          inset 0 -4px 8px rgba(120, 0, 140, 0.5), inset 0 3px 6px rgba(255, 255, 255, 0.45);
+      }
+      .elixir-drop::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.85);
+        filter: blur(1px);
+      }
+      #elixir {
+        display: flex;
+        gap: 3px;
+        padding: 5px 7px;
+        background: rgba(9, 17, 40, 0.92);
+        border: 2px solid rgba(224, 68, 208, 0.55);
+        border-radius: 10px;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55), 0 4px 14px rgba(0, 0, 0, 0.35);
+      }
+      .elixir-cell {
+        position: relative;
+        width: 25px;
+        height: 15px;
+        border-radius: 4px;
+        background: linear-gradient(
+          to top,
+          #ff6ad5 var(--fill, 0%),
+          rgba(70, 20, 110, 0.55) var(--fill, 0%)
+        );
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+        transition: background 0.1s linear;
+      }
+      .elixir-cell::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 48%);
+        pointer-events: none;
+      }
+      .elixir-cell.full {
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4), 0 0 9px rgba(255, 90, 220, 0.7);
+      }
+      #elixir-count {
+        min-width: 34px;
+        text-align: center;
+        padding: 1px 8px 2px;
+        font-family: var(--font-display);
+        font-size: 23px;
+        line-height: 1.15;
+        color: #fff;
+        text-shadow: 0 2px 0 #7a1490, 0 3px 6px rgba(0, 0, 0, 0.5);
+        background: rgba(138, 31, 184, 0.32);
+        border: 2px solid rgba(255, 120, 235, 0.5);
+        border-radius: 9px;
+      }
+
+      /* ---------- 手牌 ---------- */
+      #hand {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .card {
+        position: relative;
+        width: 108px;
+        height: 140px;
+        border-radius: 10px;
+        background: linear-gradient(
+          165deg,
+          var(--frame-a, #e8eef5) 0%,
+          var(--frame-b, #8fa6bd) 100%
+        );
+        border: 2px solid var(--frame-edge, #4d6a86);
+        box-shadow: 0 8px 20px rgba(4, 10, 26, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.55),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+        pointer-events: auto;
+        cursor: grab;
+        touch-action: none;
+        transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.16s ease, opacity 0.16s ease;
+      }
+      .card[data-rarity='common'] {
+        --frame-a: #eaf1f8;
+        --frame-b: #93aac2;
+        --frame-edge: #4f6c88;
+      }
+      .card[data-rarity='rare'] {
+        --frame-a: #ffe3b0;
+        --frame-b: #ee9a34;
+        --frame-edge: #9a5a10;
+      }
+      .card[data-rarity='epic'] {
+        --frame-a: #ecd4ff;
+        --frame-b: #a355e0;
+        --frame-edge: #5c2288;
+      }
+      .card:hover:not(.disabled) {
+        transform: translateY(-8px) scale(1.03) rotate(-1deg);
+        box-shadow: 0 16px 28px rgba(4, 10, 26, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.6),
+          inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+      }
+      .card.disabled {
+        filter: grayscale(0.85) brightness(0.62);
+        cursor: not-allowed;
+      }
+      .card.dragging-source {
+        opacity: 0.28;
+      }
+
+      .card-art {
+        position: absolute;
+        inset: 4px;
+        border-radius: 7px;
+        overflow: hidden;
+        background: var(--art-bg, linear-gradient(165deg, #7d8ba1, #2f3c52));
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25), inset 0 -10px 18px rgba(0, 0, 0, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card-art::after {
+        content: '';
+        position: absolute;
+        bottom: 12%;
+        left: 50%;
+        width: 58%;
+        height: 12%;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.3);
+        filter: blur(3px);
+      }
+      .card-icon {
+        position: relative;
+        z-index: 1;
+        font-size: 52px;
+        line-height: 1;
+        filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.5));
+        transform: translateY(-4px);
+      }
+
+      .card-cost {
+        position: absolute;
+        top: -9px;
+        left: -9px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-size: 17px;
+        color: #fff;
+        text-shadow: 0 2px 0 rgba(100, 10, 120, 0.9), 0 3px 5px rgba(0, 0, 0, 0.5);
+        z-index: 2;
+      }
+      .card-cost::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 32% 26%, #ff9ff2 0%, #e044d0 48%, #8a1fb8 100%);
+        border: 2px solid #fff;
+        border-radius: 52% 0 52% 52%;
+        transform: rotate(-45deg);
+        box-shadow: 0 3px 7px rgba(60, 0, 70, 0.55),
+          inset 0 -5px 9px rgba(110, 0, 135, 0.5), inset 0 3px 6px rgba(255, 255, 255, 0.5);
+        z-index: -1;
+      }
+
+      .card-name {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 14px 3px 5px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.6);
+        background: linear-gradient(to top, rgba(8, 16, 38, 0.92) 55%, rgba(8, 16, 38, 0));
+        border-radius: 0 0 7px 7px;
+      }
+
+      .next-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        margin-left: 6px;
+      }
+      .next-label {
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: var(--gold);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      }
+      .card.next {
+        width: 74px;
+        height: 98px;
+        opacity: 0.85;
+        cursor: default;
+        pointer-events: none;
+      }
+      .card.next:hover {
+        transform: none;
+      }
+      .card.next .card-art {
+        inset: 3px;
+        border-radius: 5px;
+      }
+      .card.next .card-icon {
+        font-size: 35px;
+      }
+      .card.next .card-cost {
+        width: 24px;
+        height: 24px;
+        top: -7px;
+        left: -7px;
+        font-size: 13px;
+      }
+      .card.next .card-name {
+        padding-top: 11px;
+        font-size: 10px;
+        padding-bottom: 4px;
+        border-radius: 0 0 5px 5px;
+      }
+
+      /* 拖拽浮层 */
+      .card.drag-float {
+        position: fixed;
+        z-index: 1000;
+        pointer-events: none;
+        transform: scale(1.08) rotate(-2deg);
+        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.65));
+        opacity: 0.96;
+        transition: none;
+      }
+
+      /* ---------- 结算 ---------- */
+      #match-end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(6, 13, 30, 0.78);
+        backdrop-filter: blur(8px);
+        pointer-events: auto;
+        transition: opacity 0.3s ease;
+      }
+      #match-end.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #match-end .panel {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 44px 78px 38px;
+        min-width: 320px;
+        background: linear-gradient(170deg, #2a5596 0%, #16386e 45%, #0d2450 100%);
+        border: 3px solid var(--gold);
+        border-radius: 20px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 0 4px rgba(13, 36, 80, 0.9),
+          inset 0 0 0 6px rgba(255, 210, 62, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+      }
+      #match-end .panel::before,
+      #match-end .panel::after {
+        content: '';
+        position: absolute;
+        top: 14px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 32% 30%, #ffe98a, #c8881a);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      #match-end .panel::before {
+        left: 14px;
+      }
+      #match-end .panel::after {
+        right: 14px;
+      }
+      #match-end-title {
+        font-family: var(--font-display);
+        font-size: 58px;
+        line-height: 1.1;
+        letter-spacing: 8px;
+        text-align: center;
+      }
+      #match-end-title.win {
+        color: var(--gold);
+        text-shadow: 0 4px 0 #7a4a00, 0 -2px 0 #fff6c0, 0 10px 26px rgba(255, 190, 40, 0.5);
+      }
+      #match-end-title.lose {
+        color: #ff7a70;
+        text-shadow: 0 4px 0 #7a1a10, 0 -2px 0 #ffd0c0, 0 10px 26px rgba(255, 90, 70, 0.45);
+      }
+      #match-end-title.draw {
+        color: #cfe0f5;
+        text-shadow: 0 4px 0 #23406b, 0 10px 26px rgba(120, 160, 220, 0.4);
+      }
+      #match-end-detail {
+        font-family: var(--font-display);
+        font-size: 22px;
+        color: #ffe27a;
+        text-shadow: 0 2px 0 rgba(10, 22, 48, 0.9);
+        font-variant-numeric: tabular-nums;
+      }
+      #match-end-restart {
+        margin-top: 10px;
+        padding: 12px 44px;
+        font-family: var(--font-display);
+        font-size: 20px;
+        letter-spacing: 2px;
+        color: #6b3d00;
+        background: linear-gradient(180deg, #ffe27a 0%, #ffc21e 55%, #f0a020 100%);
+        border: 3px solid #8a5c10;
+        border-radius: 14px;
+        box-shadow: 0 6px 0 #8a5c10, 0 12px 24px rgba(0, 0, 0, 0.45),
+          inset 0 2px 0 rgba(255, 255, 255, 0.65);
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+      }
+      #match-end-restart:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.06);
+        box-shadow: 0 8px 0 #8a5c10, 0 16px 28px rgba(0, 0, 0, 0.5),
+          inset 0 2px 0 rgba(255, 255, 255, 0.7);
+      }
+      #match-end-restart:active {
+        transform: translateY(3px);
+        box-shadow: 0 2px 0 #8a5c10, 0 6px 14px rgba(0, 0, 0, 0.4),
+          inset 0 2px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      #fps {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        color: rgba(233, 243, 255, 0.8);
+        font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+        pointer-events: none;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      }
+
+      @media (max-width: 700px) {
+        #topbar {
+          top: 10px;
+          gap: 8px;
+          padding: 7px 10px;
+        }
+        .team-meta {
+          min-width: 58px;
+        }
+        .avatar {
+          width: 30px;
+          height: 30px;
+          font-size: 17px;
+        }
+        .team-name {
+          font-size: 9px;
+        }
+        #timer {
+          font-size: 21px;
+          min-width: 64px;
+        }
+        .timer-wrap {
+          padding: 4px 12px 3px;
+        }
+        .crown-icon {
+          width: 16px;
+          height: 13px;
+        }
+        #hand {
+          gap: 6px;
+        }
+        .card {
+          width: clamp(68px, 17vw, 92px);
+          height: clamp(94px, 23vw, 122px);
+        }
+        .card-icon {
+          font-size: clamp(38px, 10vw, 46px);
+        }
+        .card.next {
+          width: 54px;
+          height: 76px;
+        }
+        .card.next .card-icon {
+          font-size: 26px;
+        }
+        .next-wrap {
+          margin-left: 2px;
+        }
+        #bottombar {
+          padding-bottom: 8px;
+          gap: 8px;
+        }
+        .elixir-cell {
+          width: 17px;
+          height: 12px;
+        }
+        .elixir-drop {
+          width: 17px;
+          height: 21px;
+        }
+        #elixir-count {
+          font-size: 18px;
+          min-width: 28px;
+        }
+        #match-end .panel {
+          padding: 34px 34px 30px;
+        }
+        #match-end-title {
+          font-size: 42px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="canvas-host"></div>
+      <div id="ui">
+        <div id="topbar">
+          <div class="team-side enemy">
+            <div class="avatar enemy">😈</div>
+            <div class="team-meta">
+              <span class="team-name">敌方国王</span>
+              <div class="crowns enemy">
+                <svg class="crown-icon" viewBox="0 0 32 26" aria-hidden="true">
+                  <path
+                    d="M3.2 18.5 L2 7 L9.6 12.4 L16 2.6 L22.4 12.4 L30 7 L28.8 18.5 Z"
+                    fill="#ffd23e"
+                    stroke="#7a4a00"
+                    stroke-width="2.2"
+                    stroke-linejoin="round"
+                  />
+                  <rect x="3.2" y="18.5" width="25.6" height="4.4" rx="2.2" fill="#ffb520" stroke="#7a4a00" stroke-width="1.8" />
+                  <circle cx="16" cy="9" r="2.4" fill="#ff5252" stroke="#7a4a00" stroke-width="1.2" />
+                </svg>
+                <span class="count" id="crowns-enemy">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="timer-wrap">
+            <div id="timer">3:00</div>
+            <div class="timer-label">剩余时间</div>
+          </div>
+          <div class="team-side player">
+            <div class="avatar player">🤴</div>
+            <div class="team-meta">
+              <span class="team-name">我方国王</span>
+              <div class="crowns player">
+                <svg class="crown-icon" viewBox="0 0 32 26" aria-hidden="true">
+                  <path
+                    d="M3.2 18.5 L2 7 L9.6 12.4 L16 2.6 L22.4 12.4 L30 7 L28.8 18.5 Z"
+                    fill="#ffd23e"
+                    stroke="#7a4a00"
+                    stroke-width="2.2"
+                    stroke-linejoin="round"
+                  />
+                  <rect x="3.2" y="18.5" width="25.6" height="4.4" rx="2.2" fill="#ffb520" stroke="#7a4a00" stroke-width="1.8" />
+                  <circle cx="16" cy="9" r="2.4" fill="#ff5252" stroke="#7a4a00" stroke-width="1.2" />
+                </svg>
+                <span class="count" id="crowns-player">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="phase-banner"></div>
+
+        <div id="bottombar">
+          <div id="elixir-row">
+            <div class="elixir-drop"></div>
+            <div id="elixir">
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+              <div class="elixir-cell"></div>
+            </div>
+            <div id="elixir-count">5</div>
+          </div>
+          <div id="hand">
+            <div class="card" data-slot="0">
+              <div class="card-art"><span class="card-icon">❓</span></div>
+              <div class="card-cost"></div>
+              <div class="card-name"></div>
+            </div>
+            <div class="card" data-slot="1">
+              <div class="card-art"><span class="card-icon">❓</span></div>
+              <div class="card-cost"></div>
+              <div class="card-name"></div>
+            </div>
+            <div class="card" data-slot="2">
+              <div class="card-art"><span class="card-icon">❓</span></div>
+              <div class="card-cost"></div>
+              <div class="card-name"></div>
+            </div>
+            <div class="card" data-slot="3">
+              <div class="card-art"><span class="card-icon">❓</span></div>
+              <div class="card-cost"></div>
+              <div class="card-name"></div>
+            </div>
+            <div class="next-wrap">
+              <span class="next-label">下一张</span>
+              <div class="card next">
+                <div class="card-art"><span class="card-icon">❓</span></div>
+                <div class="card-cost"></div>
+                <div class="card-name"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="match-end" class="hidden">
+          <div class="panel">
+            <div id="match-end-title">胜利</div>
+            <div id="match-end-detail"></div>
+            <button id="match-end-restart">再来一局</button>
+          </div>
+        </div>
+
+        <div id="fps"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
