@@ -33,6 +33,7 @@ export class CameraRig {
 
   private params: CameraParams
   private readonly controls: OrbitControls
+  private immersive = false
   private free = false
   private width = 0
   private height = 0
@@ -72,10 +73,35 @@ export class CameraRig {
     }
   }
 
-  setFreeMode(enabled: boolean): void {
+  setImmersive(enabled: boolean): void {
+    this.immersive = enabled
     this.free = enabled
     this.controls.enabled = enabled
-    if (!enabled) this.apply()
+    this.controls.enablePan = !enabled
+    this.controls.minDistance = enabled ? 10 : 0
+    this.controls.maxDistance = enabled ? 65 : Infinity
+    this.controls.maxPolarAngle = enabled ? Math.PI * 0.46 : Math.PI
+    // Flush residual orbit damping before switching camera modes.
+    this.controls.enableDamping = false
+    this.controls.update()
+    this.controls.enableDamping = true
+    if (enabled) {
+      this.camera.clearViewOffset()
+      this.camera.fov = 48
+      this.camera.position.set(9, 17, -9)
+      this.controls.target.set(9, 1, 16)
+      this.controls.update()
+      this.camera.updateProjectionMatrix()
+    }
+    this.width = 0
+    this.resize()
+  }
+
+  setFreeMode(enabled: boolean): void {
+    if (this.immersive) return
+    this.free = enabled
+    this.controls.enabled = enabled
+    if (!enabled) { this.width = 0; this.resize() }
   }
 
   update(): void {
@@ -89,6 +115,11 @@ export class CameraRig {
     this.width = width; this.height = height
     const top = Math.min(95, height * 0.16), bottom = Math.min(210, height * 0.29)
     this.camera.aspect = width / height
+    if (this.immersive) {
+      this.camera.clearViewOffset()
+      this.camera.updateProjectionMatrix()
+      return
+    }
     this.camera.setViewOffset(width, height, 0, (bottom - top) / 2, width, height)
     if (this.free) return
     this.apply()

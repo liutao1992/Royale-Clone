@@ -13,6 +13,7 @@ import { HUD } from '../ui/HUD'
 import { HandBar } from '../ui/HandBar'
 import { DragDeploy } from '../ui/DragDeploy'
 import { MatchEnd } from '../ui/MatchEnd'
+import { ImmersiveView } from '../ui/ImmersiveView'
 import { ModelLibrary } from '../render/ModelLibrary'
 
 /**
@@ -27,6 +28,7 @@ export class GameController {
   private readonly overlay: DeployOverlay
   private readonly hud: HUD
   private readonly handBar: HandBar
+  private readonly immersiveView: ImmersiveView
   private readonly matchEnd: MatchEnd
 
   private readonly raycaster = new THREE.Raycaster()
@@ -50,6 +52,10 @@ export class GameController {
     this.hud = new HUD()
     this.handBar = new HandBar()
     this.matchEnd = new MatchEnd()
+    this.immersiveView = new ImmersiveView(active => {
+      this.overlay.hide()
+      this.cameraRig.setImmersive(active)
+    })
 
     new DragDeploy(this.handBar.handEl, {
       canStart: (index) => this.canStartDrag(index),
@@ -125,6 +131,7 @@ export class GameController {
   }
 
   private restart(): void {
+    this.immersiveView.setActive(false)
     this.entityViews.clear()
     this.overlay.hide()
     this.ended = false
@@ -140,10 +147,12 @@ export class GameController {
     this.handBar.update(this.match.state.teams.player)
 
     if (!this.ended && this.match.state.winner !== null) {
+      this.immersiveView.setActive(false)
       this.ended = true
       this.matchEnd.show(this.match.state)
     }
 
+    this.arena.update(performance.now() / 1000)
     this.cameraRig.update()
     this.sceneManager.render(this.cameraRig.camera)
   }
@@ -151,6 +160,7 @@ export class GameController {
   // ---------- 拖拽部署 ----------
 
   private canStartDrag(handIndex: number): boolean {
+    if (this.immersiveView.active) return false
     if (this.match.state.winner !== null) return false
     const def = this.handCardDef(handIndex)
     if (!def) return false
@@ -186,6 +196,7 @@ export class GameController {
   }
 
   private doDeploy(handIndex: number, tile: Vec2): void {
+    if (this.immersiveView.active) return
     this.match.deployCard('player', handIndex, tile)
   }
 
