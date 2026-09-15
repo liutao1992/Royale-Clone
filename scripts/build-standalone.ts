@@ -1,19 +1,27 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises'
-import { resolve, relative, join } from 'node:path'
+import { resolve, relative, join, extname } from 'node:path'
 
 const root = resolve('dist')
+const MIME: Record<string, string> = {
+  '.glb': 'model/gltf-binary',
+  '.png': 'image/png',
+  '.ogg': 'audio/ogg',
+}
 const embedded: Record<string, string> = {}
 async function collect(dir: string): Promise<void> {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) await collect(path)
-    else if (/\.(glb|png)$/i.test(entry.name)) {
-      const type = entry.name.endsWith('.glb') ? 'model/gltf-binary' : 'image/png'
-      embedded[relative(root, path).split('\\').join('/')] = `data:${type};base64,${(await readFile(path)).toString('base64')}`
+    else {
+      const type = MIME[extname(entry.name).toLowerCase()]
+      if (type) {
+        embedded[relative(root, path).split('\\').join('/')] = `data:${type};base64,${(await readFile(path)).toString('base64')}`
+      }
     }
   }
 }
 await collect(join(root, 'models'))
+await collect(join(root, 'audio'))
 let html = await readFile(join(root, 'index.html'), 'utf8')
 const script = html.match(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/)
 if (!script) throw new Error('Built entry script not found')

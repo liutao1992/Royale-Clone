@@ -5,6 +5,7 @@
 - **确定性战斗模拟核心**：与渲染完全解耦，可无头运行、可复现（自带 `npm run sim` 与 45 项单元测试）
 - **Three.js 表现层**：竞技场、Kenney CC0 骨骼动画角色、Lux3D 兵种/塔/废墟模型，加载失败自动回退程序化建模
 - **皇室战争风格 UI**：金牌匾计时、圣水滴卡牌、蓝红血条、CR 式结算面板
+- **音效系统**：Kenney CC0 采样（WebAudio 播放，离线可用），M 键静音
 - **离线单文件版**：一条构建命令产出可直接双击运行、无需网络与服务器的独立 HTML
 
 ---
@@ -146,5 +147,6 @@ scripts/      无头模拟、独立版构建、素材转换、截图工具
 ## 素材与许可
 
 - **Kenney**（角色、武器、塔件、加农炮）：CC0 1.0，见 [`public/models/CREDITS.md`](public/models/CREDITS.md)
+- **Kenney 音效**（部署、打击、法术、胜负吉令）：CC0 1.0，见 [`public/audio/CREDITS.md`](public/audio/CREDITS.md)
 - **Lux3D** 兵种/塔/场景/废墟模型：接入说明见 [`docs/ASSET_INTEGRATION.md`](docs/ASSET_INTEGRATION.md)
 - 其余美术与 UI 为本项目程序化生成；数值快照来源见 `docs/MECHANICS.md` 附录

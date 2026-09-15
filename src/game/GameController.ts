@@ -31,7 +31,7 @@ export class GameController {
   private readonly handBar: HandBar
   private readonly immersiveView: ImmersiveView
   private readonly matchEnd: MatchEnd
-  private readonly sound = new SoundFX()
+  private readonly sound = SoundFX.instance
 
   private readonly raycaster = new THREE.Raycaster()
   private readonly groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -239,9 +239,10 @@ export class GameController {
     if (this.immersiveView.active) return
     const def = this.handCardDef(handIndex)
     if (def?.type === 'spell') {
+      const impactDelay = def.spell?.firstDelay ?? 0.3
       if (def.id === 'zap') this.sound.zap()
-      else if (def.id === 'arrows') this.sound.arrows()
-      else this.sound.spellCast()
+      else if (def.id === 'arrows') this.sound.arrows(impactDelay, def.spell?.waveInterval ?? 0.3)
+      else this.sound.spellCast(impactDelay)
     } else {
       this.sound.deploy()
     }
