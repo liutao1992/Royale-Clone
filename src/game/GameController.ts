@@ -15,6 +15,7 @@ import { DragDeploy } from '../ui/DragDeploy'
 import { MatchEnd } from '../ui/MatchEnd'
 import { ImmersiveView } from '../ui/ImmersiveView'
 import { ModelLibrary } from '../render/ModelLibrary'
+import { SoundFX } from '../audio/SoundFX'
 
 /**
  * 游戏控制器：组装模拟核心（Match）与表现层（Three.js 视图 / DOM UI）。
@@ -30,6 +31,7 @@ export class GameController {
   private readonly handBar: HandBar
   private readonly immersiveView: ImmersiveView
   private readonly matchEnd: MatchEnd
+  private readonly sound = new SoundFX()
 
   private readonly raycaster = new THREE.Raycaster()
   private readonly groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -37,6 +39,9 @@ export class GameController {
 
   private match: Match
   private ended = false
+  private lastCrowns = 0
+  private elixirFull = false
+  private readonly towerHp = new Map<number, number>()
 
   constructor(container: HTMLElement) {
     this.sceneManager = new SceneManager(container)
@@ -135,6 +140,9 @@ export class GameController {
     this.entityViews.clear()
     this.overlay.hide()
     this.ended = false
+    this.lastCrowns = 0
+    this.elixirFull = false
+    this.towerHp.clear()
     this.match = this.createMatch()
   }
 
@@ -145,9 +153,14 @@ export class GameController {
     this.entityViews.sync(world, this.cameraRig.camera, world.time, dt)
     this.hud.update(this.match.state)
     this.handBar.update(this.match.state.teams.player)
+    this.updateAudio()
 
     if (!this.ended && this.match.state.winner !== null) {
       this.immersiveView.setActive(false)
+      const winner = this.match.state.winner
+      if (winner === 'player') this.sound.victory()
+      else if (winner === 'enemy') this.sound.defeat()
+      else this.sound.draw()
       this.ended = true
       this.matchEnd.show(this.match.state)
     }
@@ -155,6 +168,32 @@ export class GameController {
     this.arena.update(performance.now() / 1000)
     this.cameraRig.update()
     this.sceneManager.render(this.cameraRig.camera)
+  }
+
+  /** 音效事件检测：皇冠变化 / 塔受击 / 满圣水 */
+  private updateAudio(): void {
+    const teams = this.match.state.teams
+
+    const crowns = teams.player.crowns + teams.enemy.crowns
+    if (crowns > this.lastCrowns) this.sound.towerDown()
+    this.lastCrowns = crowns
+
+    for (const entity of this.match.world.entities) {
+      if (entity.kind !== 'tower') continue
+      const prev = this.towerHp.get(entity.id)
+      if (prev !== undefined && entity.hp < prev - 0.5) this.sound.hitTower()
+      this.towerHp.set(entity.id, entity.hp)
+    }
+
+    const elixir = teams.player.elixir
+    if (elixir >= 9.999) {
+      if (!this.elixirFull) {
+        this.elixirFull = true
+        this.sound.elixirFull()
+      }
+    } else if (elixir < 9.9) {
+      this.elixirFull = false
+    }
   }
 
   // ---------- 拖拽部署 ----------
@@ -176,6 +215,7 @@ export class GameController {
   }
 
   private onDragStart(handIndex: number): void {
+    this.sound.pickup()
     const def = this.handCardDef(handIndex)
     const team = this.match.state.teams.player
     this.overlay.show({
@@ -197,6 +237,14 @@ export class GameController {
 
   private doDeploy(handIndex: number, tile: Vec2): void {
     if (this.immersiveView.active) return
+    const def = this.handCardDef(handIndex)
+    if (def?.type === 'spell') {
+      if (def.id === 'zap') this.sound.zap()
+      else if (def.id === 'arrows') this.sound.arrows()
+      else this.sound.spellCast()
+    } else {
+      this.sound.deploy()
+    }
     this.match.deployCard('player', handIndex, tile)
   }
 

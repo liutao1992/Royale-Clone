@@ -692,6 +692,13 @@
         font: 800 14px var(--font-body); backdrop-filter: blur(12px);
       }
       #immersive-toggle:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+      #sound-toggle {
+        position: fixed; left: 16px; top: 62px; z-index: 110;
+        padding: 10px 16px; border: 1px solid #9fd0ff; border-radius: 18px;
+        background: #12294be8; color: #cfe8ff; cursor: pointer;
+        font: 800 14px var(--font-body); backdrop-filter: blur(12px);
+      }
+      #sound-toggle:focus-visible { outline: 3px solid white; outline-offset: 3px; }
       #immersive-hint {
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
         z-index: 110; padding: 10px 18px; border-radius: 20px;
@@ -704,6 +711,8 @@
       @media (max-width: 640px) {
         #immersive-toggle { top: 96px; left: 8px; padding: 8px 12px; }
         body.immersive #immersive-toggle { top: 12px; }
+        #sound-toggle { top: 140px; left: 8px; padding: 8px 12px; }
+        body.immersive #sound-toggle { display: none; }
       }
     </style>
   </head>
