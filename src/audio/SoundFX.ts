@@ -111,21 +111,27 @@ export class SoundFX {
     this.tone(520, 520, 0.05, 'square', 0.05)
   }
 
-  /** 部署部队：布料声 + 落地闷响 */
+  /** 部署部队：卡牌"咔哒" + 布料声 + 落地闷响 */
   deploy(): void {
-    const ok = this.play('deployCloth', { gain: 0.5 })
-    const land = this.play(this.pickTake('land'), { gain: 0.55, delay: 0.05, rate: this.jitter() })
-    if (!ok && !land) {
+    const clunk = this.play('cardClunk', { gain: 0.5 })
+    this.play('deployCloth', { gain: 0.28 })
+    const land = this.play(this.pickTake('land'), { gain: 0.5, delay: 0.07, rate: this.jitter() })
+    if (!clunk && !land) {
       this.noise(0.22, 0.24, 'bandpass', 900, 260)
       this.tone(220, 110, 0.18, 'sine', 0.13)
     }
   }
 
-  /** 法术：施放呼啸 + 延迟落点爆炸（按法术飞行时间） */
+  /** 法术：施放呼啸 + 延迟爆炸，命中时叠加爆裂噼啪与嘶嘶余韵 */
   spellCast(impactDelay: number): void {
-    const ok = this.play('castWhoosh', { gain: 0.5 })
-    const boom = this.play('explosion0', { gain: 0.65, delay: Math.max(0, impactDelay) })
-    if (!ok && !boom) {
+    const t = Math.max(0, impactDelay)
+    const whoosh = this.play('castWhoosh', { gain: 0.45 })
+    const boom = this.play('explosion0', { gain: 0.6, delay: t })
+    if (whoosh || boom) {
+      this.tone(150, 45, 0.35, 'sine', 0.18, t)
+      this.crackle(5, 0.3, 0.13, t)
+      this.sizzle(0.45, 0.07, t + 0.05)
+    } else {
       this.noise(0.5, 0.3, 'lowpass', 900, 140)
       this.tone(170, 48, 0.42, 'sine', 0.24)
     }
@@ -148,9 +154,14 @@ export class SoundFX {
     }
   }
 
-  /** 电击 */
+  /** 电击：高频 ping + 噼啪 */
   zap(): void {
-    if (this.play('zap', { gain: 0.55 })) return
+    const hit = this.play('zap', { gain: 0.5 })
+    if (hit) {
+      this.tone(2600, 900, 0.07, 'sine', 0.09)
+      this.crackle(3, 0.12, 0.1)
+      return
+    }
     this.tone(1500, 320, 0.13, 'square', 0.09)
     this.noise(0.11, 0.16, 'highpass', 2200)
   }
@@ -210,6 +221,25 @@ export class SoundFX {
 
   private jitter(): number {
     return 0.96 + Math.random() * 0.08
+  }
+
+  /** 爆裂噼啪：一串随机短促高通噪声（火焰/电击特征层） */
+  private crackle(count: number, spread: number, gain: number, delay = 0): void {
+    for (let i = 0; i < count; i++) {
+      this.noise(
+        0.03 + Math.random() * 0.04,
+        gain * (0.5 + Math.random() * 0.5),
+        'highpass',
+        1200 + Math.random() * 1500,
+        undefined,
+        delay + Math.random() * spread,
+      )
+    }
+  }
+
+  /** 嘶嘶余韵：高通噪声缓慢衰减 */
+  private sizzle(duration: number, gain: number, delay = 0): void {
+    this.noise(duration, gain, 'highpass', 3200, 1600, delay)
   }
 
   /** 播放采样；采样缺失或静音时返回 false */
@@ -344,6 +374,7 @@ export class SoundFX {
 const SAMPLE_FILES = {
   pickup: 'audio/ui/pickup.ogg',
   elixirFull: 'audio/ui/elixir-full.ogg',
+  cardClunk: 'audio/deploy/card-clunk.ogg',
   deployCloth: 'audio/deploy/cloth.ogg',
   land0: 'audio/deploy/land-0.ogg',
   land1: 'audio/deploy/land-1.ogg',
